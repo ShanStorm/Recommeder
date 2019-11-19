@@ -6,64 +6,65 @@ import urllib
 import feedparser
 import json 
 
-base_url = 'http://export.arxiv.org/api/query?'
-q = input("Enter search query")
-max_results = input("Enter size of sample")
-terms = []
-start = 0
-terms = remStopwords(q)
-qf = 'all:'+terms[0]
-if len(terms)>1:
-	for i in range(1,len(terms)):
-		qf = qf + 'AND' + 'all:'+ terms[i]
+def main():
+	base_url = 'http://export.arxiv.org/api/query?'
+	q = input("Enter search query")
+	max_results = input("Enter size of sample")
+	terms = []
+	start = 0
+	terms = remStopwords(q)
+	qf = 'all:'+terms[0]
+	if len(terms)>1:
+		for i in range(1,len(terms)):
+			qf = qf + 'AND' + 'all:'+ terms[i]
 
-query = 'search_query=%s&start=0&max_results=%i'%(qf, max_results)
+	query = 'search_query=%s&start=0&max_results=%i'%(qf, max_results)
 
-tf = []
-itf = []
-title = []
-abstract = []
-dlist = []
-rel = []
-x=0
+	tf = []
+	itf = []
+	title = []
+	abstract = []
+	dlist = []
+	rel = []
+	x=0
 
-with libreq.urlopen(base_url+query) as url:
-	r = url.read()
-	feed = feedparser.parse(r)
-	for entry in feed.entries:
-		title[x] = entry.title
-		abstract[x] = entry.summary	
-		dlist[x] = title[x]+abstract[x]
-		x=x+1
-		if x>=max_results:
-			break
-	max_1=0
-	max_2=0
-	while x>0:
-		for i in range(len(terms)):
-			temptf = termFreq(terms[i], dlist[x])
-			if temptf>max_1:
-				max_1 = temptf
-				tf[x] = max_1
-			tempitf = inverseDocFreq(terms[i], dlist)
-			if tempitf>max_2:
-				max_2 = tempitf
-				itf[x] = max_2		
-		rel[x] = tf[x]*idf[x]
-		x=x-1
+	with urllib.request.urlopen(base_url+query) as url:
+		r = url.read()
+		feed = feedparser.parse(r)
+		for entry in feed.entries:
+			title[x] = entry.title
+			abstract[x] = entry.summary	
+			dlist[x] = title[x]+abstract[x]
+			x=x+1
+			if x>=max_results:
+				break
+		max_1=0
+		max_2=0
+		while x>0:
+			for i in range(len(terms)):
+				temptf = termFreq(terms[i], dlist[x])
+				if temptf>max_1:
+					max_1 = temptf
+					tf[x] = max_1
+				tempitf = inverseDocFreq(terms[i], dlist)
+				if tempitf>max_2:
+					max_2 = tempitf
+					itf[x] = max_2		
+			rel[x] = tf[x]*idf[x]
+			x=x-1
 
-	result = {res[i]: title[i] for i in range(len(res))}
-	json.dump(result, open("C:\\Users\\Admin\\Desktop\\AcadPaperRelevence.txt","w"))
+		result = {res[i]: title[i] for i in range(len(res))}
+		json.dump(result, open("C:\\Users\\Admin\\Desktop\\AcadPaperRelevence.txt","w"))
 
-	max = 0
-	tot = 5
-	while tot > 0:
-		for i in result:
-			if i>max:
-				max = i
-		print(result[max])
-		tot=tot-1
-		
+		max = 0
+		tot = 5
+		while tot > 0:
+			for i in result:
+				if i>max:
+					max = i
+			print(result[max])
+			tot=tot-1
+
 
 
 
@@ -97,3 +98,6 @@ def inverseDocFreq(term, doclist):
 	else:
 		return 0
 
+
+if __name__ == '__main__':
+	main()
